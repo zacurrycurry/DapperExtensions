@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -7,7 +7,7 @@
     <Title>Dapper Extensions</Title>
     <PackageProjectUrl>https://github.com/zacurrycurry/DapperExtensions</PackageProjectUrl>
     <Authors>zacurrycurry</Authors>
-    <Description>A useful set of extension methods for Dapper with exponential rety logic and a BCP upload service</Description>
+    <Description>A useful set of extension methods for Dapper</Description>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/zacurrycurry/DapperExtensions</RepositoryUrl>
     <PackageTags>Dapper;SQL;BCP;Extensions</PackageTags>
