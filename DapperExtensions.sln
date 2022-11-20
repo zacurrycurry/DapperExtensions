@@ -5,7 +5,12 @@ VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DapperExtensions", "src\DapperExtensions\DapperExtensions.csproj", "{5C6CD36A-5820-445A-BDB3-2BC6425564FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperExtensions.Tests", "src\DapperExtensions.Tests\DapperExtensions.Tests.csproj", "{64DB88A3-05B8-41C4-BE1D-A891F757227F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DapperExtensions.Tests", "src\DapperExtensions.Tests\DapperExtensions.Tests.csproj", "{64DB88A3-05B8-41C4-BE1D-A891F757227F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3E45B23D-6FF8-482D-8841-B1E1A332E28D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

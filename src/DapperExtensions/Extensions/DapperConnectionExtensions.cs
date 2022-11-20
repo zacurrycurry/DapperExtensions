@@ -155,6 +155,60 @@ namespace Dapper.Extensions
         }
 
         /// <summary>
+        /// Execute a single-row query asynchronously using Task with an with an exponential backoff retry policy
+        /// </summary>
+        /// <typeparam name="T">The type of results to return.</typeparam>
+        /// <param name="connection">The connection to query on.</param>
+        /// <param name="sql">The SQL to execute for the query.</param>
+        /// <param name="parameters">The parameters to pass, if any.</param>
+        /// <param name="transaction">The transaction to use, if any.</param>
+        /// <param name="commandTimeout">The number of seconds before command execution timeout.</param>
+        /// <param name="commandType">The type of command to execute.</param>
+        /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <returns>
+        /// The first instance of data of T; if a basic type (int, string, etc) is queried then the
+        /// data from the first column in assumed, otherwise an instance is created per row,
+        /// and a direct column-name===member-name mapping is assumed (case insensitive).
+        /// </returns>
+        public static async Task<T> QueryFirstWithRetryAsync<T>(this SqlConnection connection, string sql, object parameters = null,
+            IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null, int numberOfRetries = 5)
+        {
+            Guard.Against.Null(connection, nameof(connection));
+            Guard.Against.NullOrWhiteSpace(sql, nameof(sql));
+
+            await connection.CheckAndReOpenConnection();
+            return await connection.QueryFirstAsync<T>(sql, parameters, transaction, commandTimeout, commandType)
+                .WithRetry(numberOfRetries);
+        }
+
+        /// <summary>
+        /// Execute a single-row query asynchronously using Task with an with an exponential backoff retry policy
+        /// </summary>
+        /// <typeparam name="T">The type of results to return.</typeparam>
+        /// <param name="connection">The connection to query on.</param>
+        /// <param name="sql">The SQL to execute for the query.</param>
+        /// <param name="parameters">The parameters to pass, if any.</param>
+        /// <param name="transaction">The transaction to use, if any.</param>
+        /// <param name="commandTimeout">The number of seconds before command execution timeout.</param>
+        /// <param name="commandType">The type of command to execute.</param>
+        /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <returns>
+        /// The first instance of data of T; if a basic type (int, string, etc) is queried then the
+        /// data from the first column in assumed, otherwise an instance is created per row,
+        /// and a direct column-name===member-name mapping is assumed (case insensitive).
+        /// </returns>
+        public static async Task<T> QueryFirstOrDefaultWithRetryAsync<T>(this SqlConnection connection, string sql, object parameters = null,
+            IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null, int numberOfRetries = 5)
+        {
+            Guard.Against.Null(connection, nameof(connection));
+            Guard.Against.NullOrWhiteSpace(sql, nameof(sql));
+
+            await connection.CheckAndReOpenConnection();
+            return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters, transaction, commandTimeout, commandType)
+                .WithRetry(numberOfRetries);
+        }
+
+        /// <summary>
         /// Creates a temp table named '#Temp' loaded with the items in the tempData parameter.
         /// The field to join on will be #Temp.Item which will be created as a type defined in the tempDataType parameter.
         /// A sample for using an int would be QueryWithRetryAndTempTableAsync(conn, querySQL, "int", listOfInts, querySQLParameters)
