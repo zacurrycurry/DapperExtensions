@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Extensions\DapperExtensions.csproj" />
+    <ProjectReference Include="..\DapperExtensions\DapperExtensions.csproj" />
   </ItemGroup>
 
 </Project>
