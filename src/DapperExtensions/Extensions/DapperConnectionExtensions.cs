@@ -222,13 +222,14 @@ namespace Dapper.Extensions
         /// <param name="parameters"></param>
         /// <param name="batchSize"></param>
         /// <param name="numberOfRetries"></param>
+        /// <param name="commandTimeout">The number of seconds before command execution timeout.</param>
         /// <returns>
         /// A sequence of data of T; if a basic type (int, string, etc) is queried then the
         /// data from the first column in assumed, otherwise an instance is created per row,
         /// and a direct column-name===member-name mapping is assumed (case insensitive).
         /// </returns>
         public static async Task<IEnumerable<T>> QueryWithTempTableAndRetryAsync<T>(this SqlConnection connection, string sql, string tempDataType,
-            IEnumerable<string> tempData, object parameters = null, int batchSize = 10000, int numberOfRetries = 5)
+            IEnumerable<string> tempData, object parameters = null, int batchSize = 10000, int numberOfRetries = 5, int? commandTimeout = null)
         {
             Guard.Against.Null(tempData, nameof(tempData));
             Guard.Against.NullOrWhiteSpace(tempDataType, nameof(tempDataType));
@@ -249,7 +250,7 @@ namespace Dapper.Extensions
                     bulkCopy.BatchSize = batchSize;
                     bulkCopy.DestinationTableName = tmp;
                     await bulkCopy.WriteToServerAsync(reader);
-                    return await connection.QueryWithRetryAsync<T>(sql, parameters)
+                    return await connection.QueryWithRetryAsync<T>(sql, parameters, commandTimeout: commandTimeout)
                         .WithRetry(numberOfRetries);
                 }
             }
