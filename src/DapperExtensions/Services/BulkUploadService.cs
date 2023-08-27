@@ -73,7 +73,45 @@ namespace DapperExtensions.Services
                 .WithRetry(numberOfRetries);
             var allDbFields = schema.Select(x => x.COLUMN_NAME).ToList();
 
-            using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints, externalTransaction: transaction))
+            using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.TableLock, externalTransaction: transaction))
+            {
+                bulkCopy.BulkCopyTimeout = 30;
+                bulkCopy.BatchSize = batchSize;
+                bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
+
+                for (var i = 0; i < allDbFields.Count; i++)
+                {
+                    columns.Add(i, allDbFields[i]);
+                    bulkCopy.ColumnMappings.Add(allDbFields[i], i);
+                }
+
+                var datatable = ToDataTable(entities, schema);
+                await bulkCopy.WriteToServerAsync(datatable)
+                    .WithRetry(numberOfRetries);
+            }
+        }
+
+        /// <summary>
+        /// Leverages reflection to map to the target table and SqlBulkCopy for ultra-fast bulk inserts
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableSchema">Table schema (i.e. dbo)</param>
+        /// <param name="tableName">Table name</param>
+        /// <param name="connection">SQL connection</param>
+        /// <param name="entities">Data to upload</param>
+        /// <param name="sqlBulkCopyOptions">SQL bulk copy options</param>
+        /// <param name="batchSize">Load data in batches of x</param>
+        /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <returns></returns>
+        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, SqlBulkCopyOptions sqlBulkCopyOptions, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null)
+        {
+            var columns = new Dictionary<int, string>();
+            var propNames = new HashSet<string>(typeof(T).GetProperties().Select(x => x.Name).ToList());
+            var schema = await connection.GetTableSchemaAsync(tableName, tableSchema, transaction)
+                .WithRetry(numberOfRetries);
+            var allDbFields = schema.Select(x => x.COLUMN_NAME).ToList();
+
+            using (var bulkCopy = new SqlBulkCopy(connection, sqlBulkCopyOptions, externalTransaction: transaction))
             {
                 bulkCopy.BulkCopyTimeout = 30;
                 bulkCopy.BatchSize = batchSize;
