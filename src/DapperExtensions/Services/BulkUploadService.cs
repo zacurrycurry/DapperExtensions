@@ -23,8 +23,9 @@ namespace DapperExtensions.Services
         /// <param name="entities">Data to upload</param>
         /// <param name="batchSize">Load data in batches of x</param>
         /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <param name="bulkCopyTimeout">The integer value of the Microsoft.Data.SqlClient.SqlBulkCopy.BulkCopyTimeout property. The default is 30 seconds. A value of 0 indicates no limit; the bulk copy will wait indefinitely.</param>
         /// <returns></returns>
-        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, string connectionString, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5)
+        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, string connectionString, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, int bulkCopyTimeout = 30)
         {
             var columns = new Dictionary<int, string>();
             using (var connection = new SqlConnection(connectionString))
@@ -37,7 +38,7 @@ namespace DapperExtensions.Services
 
                 using (var bulkCopy = new SqlBulkCopy(connectionString, SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints))
                 {
-                    bulkCopy.BulkCopyTimeout = 30;
+                    bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
                     bulkCopy.BatchSize = batchSize;
                     bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
 
@@ -64,8 +65,9 @@ namespace DapperExtensions.Services
         /// <param name="entities">Data to upload</param>
         /// <param name="batchSize">Load data in batches of x</param>
         /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <param name="bulkCopyTimeout">The integer value of the Microsoft.Data.SqlClient.SqlBulkCopy.BulkCopyTimeout property. The default is 30 seconds. A value of 0 indicates no limit; the bulk copy will wait indefinitely.</param>
         /// <returns></returns>
-        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null)
+        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null, int bulkCopyTimeout = 30)
         {
             var columns = new Dictionary<int, string>();
             var propNames = new HashSet<string>(typeof(T).GetProperties().Select(x => x.Name).ToList());
@@ -75,7 +77,7 @@ namespace DapperExtensions.Services
 
             using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.TableLock, externalTransaction: transaction))
             {
-                bulkCopy.BulkCopyTimeout = 30;
+                bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
                 bulkCopy.BatchSize = batchSize;
                 bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
 
@@ -102,8 +104,9 @@ namespace DapperExtensions.Services
         /// <param name="sqlBulkCopyOptions">SQL bulk copy options</param>
         /// <param name="batchSize">Load data in batches of x</param>
         /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <param name="bulkCopyTimeout">The integer value of the Microsoft.Data.SqlClient.SqlBulkCopy.BulkCopyTimeout property. The default is 30 seconds. A value of 0 indicates no limit; the bulk copy will wait indefinitely.</param>
         /// <returns></returns>
-        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, SqlBulkCopyOptions sqlBulkCopyOptions, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null)
+        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, SqlBulkCopyOptions sqlBulkCopyOptions, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null, int bulkCopyTimeout = 30)
         {
             var columns = new Dictionary<int, string>();
             var propNames = new HashSet<string>(typeof(T).GetProperties().Select(x => x.Name).ToList());
@@ -113,7 +116,7 @@ namespace DapperExtensions.Services
 
             using (var bulkCopy = new SqlBulkCopy(connection, sqlBulkCopyOptions, externalTransaction: transaction))
             {
-                bulkCopy.BulkCopyTimeout = 30;
+                bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
                 bulkCopy.BatchSize = batchSize;
                 bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
 
