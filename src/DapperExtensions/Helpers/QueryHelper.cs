@@ -11,5 +11,10 @@ namespace DapperExtensions.Helpers
         {
             internal static readonly string Select = _assembly.GetQuery("DapperExtensions.Queries.TableSchema.sql");
         }
+
+        internal static class TempTableSchema
+        {
+            internal static readonly string Select = _assembly.GetQuery("DapperExtensions.Queries.TempTableSchema.sql");
+        }
     }
 }

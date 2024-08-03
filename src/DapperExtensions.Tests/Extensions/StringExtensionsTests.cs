@@ -1,5 +1,5 @@
-﻿using NUnit.Framework;
-using DapperExtensions.Extensions;
+﻿using DapperExtensions.Extensions;
+using NUnit.Framework;
 
 namespace DapperExtensions.Tests.Extensions
 {

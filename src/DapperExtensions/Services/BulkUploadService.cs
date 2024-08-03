@@ -132,9 +132,49 @@ namespace DapperExtensions.Services
             }
         }
 
+        /// <summary>
+        /// Leverages reflection to map to the target table and SqlBulkCopy for ultra-fast bulk inserts
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tempTableName">Table name</param>
+        /// <param name="connection">SQL connection</param>
+        /// <param name="entities">Data to upload</param>
+        /// <param name="sqlBulkCopyOptions">SQL bulk copy options</param>
+        /// <param name="batchSize">Load data in batches of x</param>
+        /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
+        /// <param name="bulkCopyTimeout">The integer value of the Microsoft.Data.SqlClient.SqlBulkCopy.BulkCopyTimeout property. The default is 30 seconds. A value of 0 indicates no limit; the bulk copy will wait indefinitely.</param>
+        /// <returns></returns>
+        public static async Task BulkUploadAsync<T>(string tempTableName, SqlConnection connection, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null, int bulkCopyTimeout = 30, SqlBulkCopyOptions sqlBulkCopyOptions = SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.TableLock)
+        {
+            var columns = new Dictionary<int, string>();
+            var tableSchema = await GetTempTableSchemaAsync(connection, tempTableName, transaction);
+            List<string> list = tableSchema.Select((SchemaInfo x) => x.COLUMN_NAME).ToList();
+            using (var bulkCopy = new SqlBulkCopy(connection, sqlBulkCopyOptions, externalTransaction: transaction))
+            {
+                bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
+                bulkCopy.BatchSize = batchSize;
+                bulkCopy.DestinationTableName = $"tempdb..{tempTableName}";
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    columns.Add(i, list[i]);
+                    bulkCopy.ColumnMappings.Add(list[i], i);
+                }
+
+                var table = ToDataTable(entities, tableSchema);
+                await bulkCopy.WriteToServerAsync(table)
+                    .WithRetry(numberOfRetries);
+            }
+        }
+
         private static async Task<IEnumerable<SchemaInfo>> GetTableSchemaAsync(this SqlConnection connection, string tableName, string tableSchema = "dbo", IDbTransaction transaction = null)
         {
             return await connection.QueryWithRetryAsync<SchemaInfo>(QueryHelper.TableSchema.Select, new { TableName = tableName, TableSchema = tableSchema }, transaction: transaction);
+        }
+
+        private static async Task<IEnumerable<SchemaInfo>> GetTempTableSchemaAsync(this SqlConnection connection, string tableName, IDbTransaction transaction = null)
+        {
+            return await connection.QueryWithRetryAsync<SchemaInfo>(QueryHelper.TempTableSchema.Select, new { TableName = tableName }, transaction: transaction);
         }
 
         private static DataTable ToDataTable<T>(this IEnumerable<T> data, IEnumerable<SchemaInfo> cols)

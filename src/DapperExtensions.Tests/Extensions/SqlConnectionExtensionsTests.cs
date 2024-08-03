@@ -1,5 +1,4 @@
 ﻿using Dapper.Extensions;
-using DapperExtensions;
 using Microsoft.Data.SqlClient;
 using Moq;
 using NUnit.Framework;

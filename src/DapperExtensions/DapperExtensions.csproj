@@ -19,9 +19,13 @@
 
   <ItemGroup>
     <None Remove="Queries\TableSchema.sql" />
+    <None Remove="Queries\TempTableSchema.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Queries\TempTableSchema.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Queries\TableSchema.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
