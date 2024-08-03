@@ -17,7 +17,7 @@ namespace DapperExtensions.Services
         /// Leverages reflection to map to the target table and SqlBulkCopy for ultra-fast bulk inserts
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="tableSchema">Table schema (i.e. dbo), if null will not use any schema - use for temp tables</param>
+        /// <param name="tableSchema">Table schema (i.e. dbo)</param>
         /// <param name="tableName">Table name</param>
         /// <param name="connectionString">SQL connection string</param>
         /// <param name="entities">Data to upload</param>
@@ -25,7 +25,7 @@ namespace DapperExtensions.Services
         /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
         /// <param name="bulkCopyTimeout">The integer value of the Microsoft.Data.SqlClient.SqlBulkCopy.BulkCopyTimeout property. The default is 30 seconds. A value of 0 indicates no limit; the bulk copy will wait indefinitely.</param>
         /// <returns></returns>
-        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, string connectionString, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, int bulkCopyTimeout = 30, SqlBulkCopyOptions sqlBulkCopyOptions = SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.TableLock)
+        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, string connectionString, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, int bulkCopyTimeout = 30)
         {
             var columns = new Dictionary<int, string>();
             using (var connection = new SqlConnection(connectionString))
@@ -36,18 +36,11 @@ namespace DapperExtensions.Services
                     .WithRetry(numberOfRetries);
                 var allDbFields = schema.Select(x => x.COLUMN_NAME).ToList();
 
-                using (var bulkCopy = new SqlBulkCopy(connectionString, sqlBulkCopyOptions))
+                using (var bulkCopy = new SqlBulkCopy(connectionString, SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints))
                 {
                     bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
                     bulkCopy.BatchSize = batchSize;
-                    if (string.IsNullOrWhiteSpace(tableSchema))
-                    {
-                        bulkCopy.DestinationTableName = tableName;
-                    }
-                    else
-                    {
-                        bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
-                    }
+                    bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
 
                     for (var i = 0; i < allDbFields.Count; i++)
                     {
@@ -66,7 +59,7 @@ namespace DapperExtensions.Services
         /// Leverages reflection to map to the target table and SqlBulkCopy for ultra-fast bulk inserts
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="tableSchema">Table schema (i.e. dbo), if null will not use any schema - use for temp tables</param>
+        /// <param name="tableSchema">Table schema (i.e. dbo)</param>
         /// <param name="tableName">Table name</param>
         /// <param name="connection">SQL connection</param>
         /// <param name="entities">Data to upload</param>
@@ -74,7 +67,7 @@ namespace DapperExtensions.Services
         /// <param name="numberOfRetries">The maximum number of attempts to retry.</param>
         /// <param name="bulkCopyTimeout">The integer value of the Microsoft.Data.SqlClient.SqlBulkCopy.BulkCopyTimeout property. The default is 30 seconds. A value of 0 indicates no limit; the bulk copy will wait indefinitely.</param>
         /// <returns></returns>
-        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null, int bulkCopyTimeout = 30, SqlBulkCopyOptions sqlBulkCopyOptions = SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.TableLock)
+        public static async Task BulkUploadAsync<T>(string tableSchema, string tableName, SqlConnection connection, IEnumerable<T> entities, int batchSize = 1000, int numberOfRetries = 5, SqlTransaction transaction = null, int bulkCopyTimeout = 30)
         {
             var columns = new Dictionary<int, string>();
             var propNames = new HashSet<string>(typeof(T).GetProperties().Select(x => x.Name).ToList());
@@ -82,18 +75,11 @@ namespace DapperExtensions.Services
                 .WithRetry(numberOfRetries);
             var allDbFields = schema.Select(x => x.COLUMN_NAME).ToList();
 
-            using (var bulkCopy = new SqlBulkCopy(connection, sqlBulkCopyOptions, externalTransaction: transaction))
+            using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.TableLock, externalTransaction: transaction))
             {
                 bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
                 bulkCopy.BatchSize = batchSize;
-                if (string.IsNullOrWhiteSpace(tableSchema))
-                {
-                    bulkCopy.DestinationTableName = tableName;
-                }
-                else
-                {
-                    bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
-                }
+                bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
 
                 for (var i = 0; i < allDbFields.Count; i++)
                 {
@@ -111,7 +97,7 @@ namespace DapperExtensions.Services
         /// Leverages reflection to map to the target table and SqlBulkCopy for ultra-fast bulk inserts
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="tableSchema">Table schema (i.e. dbo), if null will not use any schema - use for temp tables</param>
+        /// <param name="tableSchema">Table schema (i.e. dbo)</param>
         /// <param name="tableName">Table name</param>
         /// <param name="connection">SQL connection</param>
         /// <param name="entities">Data to upload</param>
@@ -132,14 +118,7 @@ namespace DapperExtensions.Services
             {
                 bulkCopy.BulkCopyTimeout = bulkCopyTimeout;
                 bulkCopy.BatchSize = batchSize;
-                if (string.IsNullOrWhiteSpace(tableSchema))
-                {
-                    bulkCopy.DestinationTableName = tableName;
-                }
-                else
-                {
-                    bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
-                }
+                bulkCopy.DestinationTableName = $"[{tableSchema}].[{tableName}]";
 
                 for (var i = 0; i < allDbFields.Count; i++)
                 {
